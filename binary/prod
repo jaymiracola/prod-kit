@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -e
+
+CLAIM_FILE=prodkit.yaml
+CLAIM_NAME="example"
+NAMESPACE="default"
+
+cmd_init() {
+  cat > "$CLAIM_FILE" <<EOF
+apiVersion: customer.upbound.io/v1alpha1
+kind: Prodkit
+metadata:
+  name: $CLAIM_NAME
+  namespace: $NAMESPACE
+spec:
+  parameters:
+    image: us-docker.pkg.dev/cloudrun/container/hello
+    db: true
+    cache: true
+EOF
+  echo "Wrote claim manifest to $CLAIM_FILE"
+}
+
+cmd_up() {
+  kubectl apply -f "$CLAIM_FILE"
+}
+
+cmd_open() {
+  # allow passing MR name as second arg, otherwise pick the first one
+  MR_NAME="${2:-$(kubectl get v2services.cloudrun.gcp.upbound.io \
+    -n "$NAMESPACE" \
+    -o jsonpath='{.items[0].metadata.name}')}"
+  echo "Fetching URI for service '$MR_NAME'..."
+  uri=$(kubectl get v2services.cloudrun.gcp.upbound.io "$MR_NAME" \
+    -n "$NAMESPACE" \
+    -o jsonpath='{.status.atProvider.uri}')
+  echo "Opening $uri"
+  if command -v xdg-open >/dev/null; then
+    xdg-open "$uri"
+  else
+    open "$uri"
+  fi
+}
+
+case "$1" in
+  init) cmd_init ;;
+  up)   cmd_up   ;;
+  open) cmd_open "$@" ;;
+  *)    echo "Usage: $0 {init|up|open [MR_NAME]}"; exit 1 ;;
+esac

@@ -1,0 +1,41 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xprodkits.customer.upbound.io
+spec:
+  claimNames:
+    kind: Prodkit
+    plural: prodkits
+  group: customer.upbound.io
+  names:
+    categories:
+    - crossplane
+    kind: Xprodkit
+    plural: xprodkits
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        description: prodkit is the Schema for the prodkit API.
+        properties:
+          spec:
+            description: prodkitSpec defines the desired state of prodkit.
+            properties:
+              parameters:
+                properties:
+                  cache:
+                    type: boolean
+                  db:
+                    type: boolean
+                  image:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: prodkitStatus defines the observed state of prodkit.
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
